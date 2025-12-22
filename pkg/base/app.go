@@ -13,8 +13,8 @@ type Application struct {
 
 	elements modules.Elements
 
-	hovered       int
-	activeElement int
+	hovered       modules.Element
+	activeElement modules.Element
 	dragging      bool
 }
 
@@ -25,8 +25,8 @@ func (app *Application) IsActive() bool {
 
 func (app *Application) Init() {
 	app.elements = []modules.Element{}
-	app.hovered = -1
-	app.activeElement = -1
+	app.hovered = nil
+	app.activeElement = nil
 	app.dragging = false
 
 	rl.SetTargetFPS(60)
@@ -46,46 +46,52 @@ func (app *Application) Update() {
 			i++
 		}
 	}
-	// app.elements = app.elements.LayerSort()
 }
 
 func (app *Application) Input() {
 	mouse := rl.GetMousePosition()
 
 	newHovered := app.findHovered(mouse)
-
 	// Hover / Unhover
 	if newHovered != app.hovered {
-		if app.hovered != -1 {
-			app.elements[app.hovered].OnUnhover()
+		if app.hovered != nil {
+			app.hovered.OnUnhover()
 		}
-		if newHovered != -1 {
-			app.elements[newHovered].OnHover()
+		if newHovered != nil {
+			newHovered.OnHover()
 		}
 		app.hovered = newHovered
 	}
 
 	// Mouse press
-	if rl.IsMouseButtonPressed(rl.MouseLeftButton) && app.hovered != -1 {
+	if rl.IsMouseButtonPressed(rl.MouseLeftButton) && app.hovered != nil {
 		app.activeElement = app.hovered
 		app.dragging = true
-		app.elements[app.activeElement].OnLeftClick(mouse)
+		app.activeElement.OnLeftClick(mouse)
+		app.elements = app.elements.LayerSort()
+	}
+	if rl.IsMouseButtonPressed(rl.MouseRightButton) && app.hovered != nil {
+		app.activeElement = app.hovered
+		app.activeElement.OnRightClick(mouse)
+		app.elements = app.elements.LayerSort()
 	}
 
 	// Drag
-	if app.dragging && app.activeElement != -1 {
-		app.elements[app.activeElement].OnDrag(mouse)
+	if app.dragging && app.activeElement != nil {
+		app.activeElement.OnDrag(mouse)
 	}
 
 	// Mouse release
 	if rl.IsMouseButtonReleased(rl.MouseLeftButton) {
-		if app.dragging && app.activeElement != -1 {
-			app.elements[app.activeElement].OnDrop(mouse)
+		if app.dragging && app.activeElement != nil {
+			app.activeElement.OnDrop(mouse)
+			app.elements = app.elements.LayerSort()
 		}
 		app.dragging = false
-		app.activeElement = -1
+		app.activeElement = nil
 	}
 }
+
 func (app *Application) Close() {
 	app.elements = nil
 }
@@ -98,21 +104,21 @@ func (app *Application) Render() {
 	rl.BeginDrawing()
 	rl.ClearBackground(rl.RayWhite)
 
-	rl.DrawText(fmt.Sprintf("%.2f", rl.GetFrameTime()*100), 500, 500, 20, rl.Green)
-
 	for _, element := range app.elements {
+		fmt.Println("Drawing element at layer ", element.GetLayer())
 		element.Draw()
 	}
+	rl.DrawText(fmt.Sprintf("%.2f", rl.GetFrameTime()*100), 500, 500, 20, rl.Green)
 
 	rl.EndDrawing()
-
 }
 
-func (app *Application) findHovered(mouse rl.Vector2) int {
-	for i, el := range app.elements {
-		if rl.CheckCollisionPointRec(mouse, el.GetBounds()) {
-			return i
+func (app *Application) findHovered(mouse rl.Vector2) modules.Element {
+	for i := len(app.elements) - 1; i >= 0; i-- {
+		if rl.CheckCollisionPointRec(mouse, app.elements[i].GetBounds()) {
+			return app.elements[i]
 		}
 	}
-	return -1
+
+	return nil
 }

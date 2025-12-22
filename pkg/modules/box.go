@@ -104,10 +104,8 @@ func (p *Panel) Update(dt float32) {
 			p.Shrinking = false
 			p.Dead = true
 		}
-
 		return
 	}
-
 }
 
 func (p *Panel) OnHover() {
@@ -130,15 +128,23 @@ func (p *Panel) OnLeftClick(mouse rl.Vector2) {
 	if p.Shrinking || p.Dead {
 		return
 	}
+	p.layer = 10 // bring to front while dragging
+
 }
+func (p *Panel) OnRightClick(mouse rl.Vector2) {
+	fmt.Println("box ", p.name, " RClicked at ", mouse)
+	if p.Shrinking || p.Dead {
+		return
+	}
+}
+
 func (p *Panel) OnDrag(mouse rl.Vector2) {
 	if p.Shrinking || p.Dead {
 		return
 	}
 
 	p.dragging = true
-	p.layer = 10 // bring to front while dragging
-	fmt.Println("box ", p.name, " dragged at ", mouse)
+	fmt.Println("drag box ", p.name, " layer ", p.layer)
 }
 func (p *Panel) OnDrop(mouse rl.Vector2) {
 	if p.Shrinking || p.Dead {
@@ -147,5 +153,5 @@ func (p *Panel) OnDrop(mouse rl.Vector2) {
 
 	p.dragging = false
 	p.layer = p.baseLayer
-	fmt.Println("box ", p.name, " dropped at ", mouse)
+	fmt.Println("drop box ", p.name, " layer ", p.layer)
 }

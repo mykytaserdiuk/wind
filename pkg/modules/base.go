@@ -1,6 +1,10 @@
 package modules
 
-import rl "github.com/gen2brain/raylib-go/raylib"
+import (
+	"sort"
+
+	rl "github.com/gen2brain/raylib-go/raylib"
+)
 
 type Element interface {
 	Draw()
@@ -15,7 +19,7 @@ type Element interface {
 	OnUnhover()
 
 	OnLeftClick(mouse rl.Vector2)
-	// OnRightClick(mouse rl.Vector2)
+	OnRightClick(mouse rl.Vector2)
 	OnDrag(mouse rl.Vector2)
 	OnDrop(mouse rl.Vector2)
 }
@@ -23,19 +27,9 @@ type Element interface {
 type Elements []Element
 
 func (es Elements) LayerSort() Elements {
-	sorted := make(Elements, len(es))
-
-	for i, element := range es {
-		layer := element.GetLayer()
-		if layer < 0 {
-			sorted[i] = element
-		} else {
-			for j := i - 1; j >= 0 && sorted[j].GetLayer() > layer; j-- {
-				sorted[j+1] = sorted[j]
-			}
-			sorted[i] = element
-		}
-	}
-
-	return sorted
+	sort.Slice(es, func(i, j int) bool {
+		ei, ej := es[i], es[j]
+		return ei.GetLayer() < ej.GetLayer() // < вместо >
+	})
+	return es
 }
