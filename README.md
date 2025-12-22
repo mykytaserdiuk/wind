@@ -1,2 +1,2 @@
 - BUILD 
-go build -ldflags "-H=windowsgui" .
+go build -o "./wind.exe" -ldflags "-H=windowsgui" .

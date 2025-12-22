@@ -19,7 +19,10 @@ func init() {
 func main() {
 	rl.InitWindow(models.WindowWidth, models.WindowHeight, "WIND")
 	defer rl.CloseWindow()
-	box1 := modules.NewPanel("box1", 200, 200, 10, 10, rl.Blue)
+
+	rect := models.NewRect(10, 10, 200, 200)
+
+	box1 := modules.NewPanel("box1", rect, rl.Blue)
 	box2 := box1.Split(0.5, true)
 	app.AddElement(box1)
 	app.AddElement(box2)

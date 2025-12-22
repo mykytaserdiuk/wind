@@ -12,33 +12,34 @@ import (
 type Panel struct {
 	name string
 
-	Width  int32
-	Height int32
-	PosX   int32
-	PosY   int32
-
+	BaseRect  *models.Rect
 	BaseColor rl.Color
+	baseLayer int8
 
 	Shrinking bool
 	Dead      bool
-	Color     rl.Color
+
+	dragging bool
+
+	layer int8
+	Rect  models.Rect
+	Color rl.Color
 }
 
 func NewPanel(
 	name string,
-	width int32,
-	height int32,
-	posX int32,
-	posY int32,
+	rect *models.Rect,
 	color rl.Color,
 ) *Panel {
 
+	baseRect := rect.Clone()
+
 	return &Panel{
+		layer:     1,
+		baseLayer: 1,
 		name:      name,
-		Width:     width,
-		Height:    height,
-		PosX:      posX,
-		PosY:      posY,
+		BaseRect:  baseRect,
+		Rect:      *rect,
 		BaseColor: color,
 		Color:     color,
 
@@ -47,90 +48,104 @@ func NewPanel(
 	}
 }
 
-func (b *Panel) Split(persent float32, horizontal bool) *Panel {
-	var newBox *Panel
+func (p *Panel) Split(persent float32, horizontal bool) *Panel {
+	var newPanel *Panel
+	var rect *models.Rect
 	if horizontal {
-		diff := b.Height - int32(float32(b.Height)*persent)
-		newBox = NewPanel(b.name+"_split", b.Width, diff, b.PosX, b.PosY+int32(float32(b.Height)*persent), b.BaseColor)
-		b.Height = int32(float32(b.Height) * persent)
+		diff := p.Rect.Height - int32(float32(p.Rect.Height)*persent)
+		rect = models.NewRect(p.Rect.PosX, p.Rect.PosY+int32(float32(p.Rect.Height)*persent), p.Rect.Width, diff)
+		p.Rect.Height = p.Rect.Height - diff
 	} else {
-		diff := b.Width - int32(float32(b.Width)*persent)
-		newBox = NewPanel(b.name+"_split", diff, b.Height, b.PosX+int32(float32(b.Width)*persent), b.PosY, b.BaseColor)
-		b.Width = int32(float32(b.Width) * persent)
+		diff := p.Rect.Width - int32(float32(p.Rect.Width)*persent)
+		rect = models.NewRect(p.Rect.PosX+int32(float32(p.Rect.Width)*persent), p.Rect.PosY, diff, p.Rect.Height)
+		p.Rect.Width = p.Rect.Width - diff
 	}
 
-	return newBox
+	newPanel = NewPanel(p.name+"_split", rect, p.BaseColor)
+
+	return newPanel
 }
 
-func (b *Panel) SetParent() {
-	// Implementation for setting parent if needed
+func (p *Panel) GetLayer() int8 {
+	return p.layer
 }
-func (b *Panel) GetBounds() rl.Rectangle {
+
+func (p *Panel) GetBounds() rl.Rectangle {
 	return rl.Rectangle{
-		X:      float32(b.PosX),
-		Y:      float32(b.PosY),
-		Width:  float32(b.Width),
-		Height: float32(b.Height),
+		X:      float32(p.Rect.PosX),
+		Y:      float32(p.Rect.PosY),
+		Width:  float32(p.Rect.Width),
+		Height: float32(p.Rect.Height),
 	}
 }
-func (b *Panel) IsDead() bool {
-	return b.Dead
+func (p *Panel) IsDead() bool {
+	return p.Dead
 }
 
-func (b *Panel) Draw() {
-	rl.DrawRectangle(b.PosX, b.PosY, b.Width, b.Height, b.Color)
-	rl.DrawRectangleLines(b.PosX, b.PosY, b.Width, b.Height, rl.Black)
+func (p *Panel) Draw() {
+	rl.DrawRectangle(p.Rect.PosX, p.Rect.PosY, p.Rect.Width, p.Rect.Height, p.Color)
+	rl.DrawRectangleLines(p.Rect.PosX, p.Rect.PosY, p.Rect.Width, p.Rect.Height, rl.Black)
 }
 
-func (b *Panel) Update(dt float32) {
-	if b.Shrinking {
-		if b.Width > 0 && b.Height > 0 {
-			b.Width -= int32(models.BoxDeleteSpeed * dt * 100)
-			b.Height -= int32(models.BoxDeleteSpeed * dt * 100)
-			// b.PosX += int32(models.BoxDeleteSpeed * dt * 100)
-			// b.PosY -= int32(models.BoxDeleteSpeed * dt * 100)
+func (p *Panel) Update(dt float32) {
+	if p.dragging {
+		mouse := rl.GetMousePosition()
+		p.Rect.PosX = int32(mouse.X) - p.Rect.Width/2
+		p.Rect.PosY = int32(mouse.Y) - p.Rect.Height/2
+
+		return
+	}
+
+	if p.Shrinking {
+		if p.Rect.Width > 0 && p.Rect.Height > 0 {
+			p.Rect.Width -= int32(models.BoxDeleteSpeed * dt * 100)
+			p.Rect.Height -= int32(models.BoxDeleteSpeed * dt * 100)
 		} else {
-			b.Shrinking = false
-			b.Dead = true
+			p.Shrinking = false
+			p.Dead = true
 		}
+
+		return
 	}
 
 }
 
-func (b *Panel) OnHover() {
-	fmt.Println("box ", b.name, " hovered")
-	if b.Shrinking || b.Dead {
+func (p *Panel) OnHover() {
+	fmt.Println("box ", p.name, " hovered")
+	if p.Shrinking || p.Dead {
 		return
 	}
 
-	b.Color = utils.MakeLighter(b.BaseColor, 0.1)
+	p.Color = utils.MakeLighter(p.BaseColor, 0.1)
 }
-func (b *Panel) OnUnhover() {
-	fmt.Println("box ", b.name, " unhovered")
-	if b.Shrinking || b.Dead {
+func (p *Panel) OnUnhover() {
+	fmt.Println("box ", p.name, " unhovered")
+	if p.Shrinking || p.Dead {
 		return
 	}
-	b.Color = b.BaseColor
+	p.Color = p.BaseColor
 }
-func (b *Panel) OnClick(mouse rl.Vector2) {
-	fmt.Println("box ", b.name, " clicked at ", mouse)
-	if b.Shrinking || b.Dead {
+func (p *Panel) OnLeftClick(mouse rl.Vector2) {
+	fmt.Println("box ", p.name, " clicked at ", mouse)
+	if p.Shrinking || p.Dead {
 		return
 	}
-	b.Color = rl.Red
-	b.Shrinking = true
 }
-func (b *Panel) OnDrag(mouse rl.Vector2) {
-	if b.Shrinking || b.Dead {
-		return
-	}
-
-	fmt.Println("box ", b.name, " dragged at ", mouse)
-}
-func (b *Panel) OnDrop(mouse rl.Vector2) {
-	if b.Shrinking || b.Dead {
+func (p *Panel) OnDrag(mouse rl.Vector2) {
+	if p.Shrinking || p.Dead {
 		return
 	}
 
-	fmt.Println("box ", b.name, " dropped at ", mouse)
+	p.dragging = true
+	p.layer = 10 // bring to front while dragging
+	fmt.Println("box ", p.name, " dragged at ", mouse)
+}
+func (p *Panel) OnDrop(mouse rl.Vector2) {
+	if p.Shrinking || p.Dead {
+		return
+	}
+
+	p.dragging = false
+	p.layer = p.baseLayer
+	fmt.Println("box ", p.name, " dropped at ", mouse)
 }

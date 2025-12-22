@@ -11,7 +11,7 @@ import (
 type Application struct {
 	active bool
 
-	elements []modules.Element
+	elements modules.Elements
 
 	hovered       int
 	activeElement int
@@ -34,6 +34,7 @@ func (app *Application) Init() {
 
 func (app *Application) Update() {
 	dt := rl.GetFrameTime()
+
 	for i := 0; i < len(app.elements); {
 		el := app.elements[i]
 		el.Update(dt)
@@ -45,6 +46,7 @@ func (app *Application) Update() {
 			i++
 		}
 	}
+	// app.elements = app.elements.LayerSort()
 }
 
 func (app *Application) Input() {
@@ -67,7 +69,7 @@ func (app *Application) Input() {
 	if rl.IsMouseButtonPressed(rl.MouseLeftButton) && app.hovered != -1 {
 		app.activeElement = app.hovered
 		app.dragging = true
-		app.elements[app.activeElement].OnClick(mouse)
+		app.elements[app.activeElement].OnLeftClick(mouse)
 	}
 
 	// Drag

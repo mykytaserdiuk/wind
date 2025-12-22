@@ -1,17 +1,26 @@
 package models
 
 type Rect struct {
-	X      int32
-	Y      int32
+	PosX   int32
+	PosY   int32
 	Width  int32
 	Height int32
 }
 
 func NewRect(x, y, width, height int32) *Rect {
 	return &Rect{
-		X:      x,
-		Y:      y,
+		PosX:   x,
+		PosY:   y,
 		Width:  width,
 		Height: height,
+	}
+}
+
+func (r *Rect) Clone() *Rect {
+	return &Rect{
+		PosX:   r.PosX,
+		PosY:   r.PosY,
+		Width:  r.Width,
+		Height: r.Height,
 	}
 }
