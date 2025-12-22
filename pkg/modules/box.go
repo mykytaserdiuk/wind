@@ -21,9 +21,10 @@ type Panel struct {
 
 	dragging bool
 
-	layer int8
-	Rect  models.Rect
-	Color rl.Color
+	layer       int8
+	Rect        models.Rect
+	Color       rl.Color
+	CloseButton *ExitButton
 }
 
 func NewPanel(
@@ -33,7 +34,12 @@ func NewPanel(
 ) *Panel {
 
 	baseRect := rect.Clone()
-
+	closeButton := NewExitButton(models.NewRect(
+		rect.PosX,
+		rect.PosY,
+		15,
+		15,
+	))
 	return &Panel{
 		layer:     1,
 		baseLayer: 1,
@@ -43,8 +49,9 @@ func NewPanel(
 		BaseColor: color,
 		Color:     color,
 
-		Shrinking: false,
-		Dead:      false,
+		Shrinking:   false,
+		Dead:        false,
+		CloseButton: closeButton,
 	}
 }
 
@@ -62,6 +69,12 @@ func (p *Panel) Split(persent float32, horizontal bool) *Panel {
 	}
 
 	newPanel = NewPanel(p.name+"_split", rect, p.BaseColor)
+	p.CloseButton = NewExitButton(models.NewRect(
+		p.Rect.PosX,
+		p.Rect.PosY,
+		15,
+		15,
+	))
 
 	return newPanel
 }
@@ -85,6 +98,10 @@ func (p *Panel) IsDead() bool {
 func (p *Panel) Draw() {
 	rl.DrawRectangle(p.Rect.PosX, p.Rect.PosY, p.Rect.Width, p.Rect.Height, p.Color)
 	rl.DrawRectangleLines(p.Rect.PosX, p.Rect.PosY, p.Rect.Width, p.Rect.Height, rl.Black)
+
+	if !p.CloseButton.IsDeleted() {
+		p.CloseButton.Draw()
+	}
 }
 
 func (p *Panel) Update(dt float32) {
@@ -93,6 +110,7 @@ func (p *Panel) Update(dt float32) {
 		p.Rect.PosX = int32(mouse.X) - p.Rect.Width/2
 		p.Rect.PosY = int32(mouse.Y) - p.Rect.Height/2
 
+		p.CloseButton.NewPos(p.Rect.PosX, p.Rect.PosY)
 		return
 	}
 
@@ -123,13 +141,20 @@ func (p *Panel) OnUnhover() {
 	}
 	p.Color = p.BaseColor
 }
+
 func (p *Panel) OnLeftClick(mouse rl.Vector2) {
 	fmt.Println("box ", p.name, " clicked at ", mouse)
 	if p.Shrinking || p.Dead {
 		return
 	}
-	p.layer = 10 // bring to front while dragging
 
+	p.layer = 10
+
+	if rl.CheckCollisionPointRec(mouse, p.CloseButton.GetBounds()) {
+		fmt.Println("Closing box ", p.name)
+		p.Shrinking = true
+		p.CloseButton.Delete()
+	}
 }
 func (p *Panel) OnRightClick(mouse rl.Vector2) {
 	fmt.Println("box ", p.name, " RClicked at ", mouse)

@@ -50,8 +50,8 @@ func (app *Application) Update() {
 
 func (app *Application) Input() {
 	mouse := rl.GetMousePosition()
-
 	newHovered := app.findHovered(mouse)
+
 	// Hover / Unhover
 	if newHovered != app.hovered {
 		if app.hovered != nil {
@@ -105,7 +105,6 @@ func (app *Application) Render() {
 	rl.ClearBackground(rl.RayWhite)
 
 	for _, element := range app.elements {
-		fmt.Println("Drawing element at layer ", element.GetLayer())
 		element.Draw()
 	}
 	rl.DrawText(fmt.Sprintf("%.2f", rl.GetFrameTime()*100), 500, 500, 20, rl.Green)
