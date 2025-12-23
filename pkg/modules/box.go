@@ -109,10 +109,10 @@ func (p *Panel) Draw() {
 }
 
 func (p *Panel) Update(dt float32) {
+	mouseDelta := rl.GetMouseDelta()
 	if p.dragging {
-		mouse := rl.GetMousePosition()
-		p.Rect.PosX = int32(mouse.X) - p.Rect.Width/2
-		p.Rect.PosY = int32(mouse.Y) - p.Rect.Height/2
+		p.Rect.PosX += int32(mouseDelta.X) // int32(p.DragOffset.X) - p.Rect.Width/2
+		p.Rect.PosY += int32(mouseDelta.Y) //= int32(p.DragOffset.Y) - p.Rect.Height/2
 
 		p.CloseButton.NewPos(p.Rect.PosX, p.Rect.PosY)
 		return
@@ -154,7 +154,6 @@ func (p *Panel) OnLeftClick(mouse rl.Vector2) {
 	}
 
 	p.layer = 10
-
 	if rl.CheckCollisionPointRec(mouse, p.CloseButton.GetBounds()) {
 		fmt.Println("Closing box ", p.name)
 		p.Shrinking = true
@@ -183,7 +182,6 @@ func (p *Panel) OnDrag(mouse rl.Vector2) {
 	}
 
 	p.dragging = true
-	fmt.Println("drag box ", p.name, " layer ", p.layer)
 }
 func (p *Panel) OnDrop(mouse rl.Vector2) {
 	if p.Shrinking || p.Dead {

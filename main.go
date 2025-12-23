@@ -9,7 +9,7 @@ import (
 )
 
 var (
-	app = &base.Application{}
+	app = base.NewApplication()
 )
 
 func init() {
