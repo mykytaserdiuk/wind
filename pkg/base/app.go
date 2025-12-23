@@ -3,24 +3,19 @@ package base
 import (
 	"fmt"
 
-	"github.com/nikitaserdiuk9/pkg/modules"
-
 	rl "github.com/gen2brain/raylib-go/raylib"
+	"github.com/nikitaserdiuk9/pkg/modules"
 )
 
 type Application struct {
 	active bool
 
-	elements modules.Elements
+	elements     modules.Elements
+	newElementCh chan modules.Element
 
 	hovered       modules.Element
 	activeElement modules.Element
 	dragging      bool
-}
-
-func (app *Application) IsActive() bool {
-	app.active = rl.WindowShouldClose() == false
-	return app.active
 }
 
 func (app *Application) Init() {
@@ -28,8 +23,31 @@ func (app *Application) Init() {
 	app.hovered = nil
 	app.activeElement = nil
 	app.dragging = false
-
 	rl.SetTargetFPS(60)
+}
+
+func (app *Application) GetNewElementChannel() chan modules.Element {
+	newElementCh := make(chan modules.Element)
+	app.newElementCh = newElementCh
+
+	go func() {
+		for {
+			newElem, ok := <-app.newElementCh
+			if !ok {
+				fmt.Println("New element channel closed")
+				return
+			}
+
+			app.AddElement(newElem)
+		}
+	}()
+
+	return app.newElementCh
+}
+
+func (app *Application) IsActive() bool {
+	app.active = rl.WindowShouldClose() == false
+	return app.active
 }
 
 func (app *Application) Update() {

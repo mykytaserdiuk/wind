@@ -12,9 +12,10 @@ import (
 type Panel struct {
 	name string
 
-	BaseRect  *models.Rect
-	BaseColor rl.Color
-	baseLayer int8
+	BaseRect     *models.Rect
+	BaseColor    rl.Color
+	baseLayer    int8
+	newElementCh chan Element
 
 	Shrinking bool
 	Dead      bool
@@ -31,6 +32,7 @@ func NewPanel(
 	name string,
 	rect *models.Rect,
 	color rl.Color,
+	newElemCh chan Element,
 ) *Panel {
 
 	baseRect := rect.Clone()
@@ -44,10 +46,12 @@ func NewPanel(
 		layer:     1,
 		baseLayer: 1,
 		name:      name,
-		BaseRect:  baseRect,
-		Rect:      *rect,
-		BaseColor: color,
-		Color:     color,
+
+		newElementCh: newElemCh,
+		BaseRect:     baseRect,
+		Rect:         *rect,
+		BaseColor:    color,
+		Color:        color,
 
 		Shrinking:   false,
 		Dead:        false,
@@ -68,7 +72,7 @@ func (p *Panel) Split(persent float32, horizontal bool) *Panel {
 		p.Rect.Width = p.Rect.Width - diff
 	}
 
-	newPanel = NewPanel(p.name+"_split", rect, p.BaseColor)
+	newPanel = NewPanel(p.name+"_split", rect, p.BaseColor, p.newElementCh)
 	p.CloseButton = NewExitButton(models.NewRect(
 		p.Rect.PosX,
 		p.Rect.PosY,
@@ -134,6 +138,7 @@ func (p *Panel) OnHover() {
 
 	p.Color = utils.MakeLighter(p.BaseColor, 0.1)
 }
+
 func (p *Panel) OnUnhover() {
 	fmt.Println("box ", p.name, " unhovered")
 	if p.Shrinking || p.Dead {
@@ -156,11 +161,20 @@ func (p *Panel) OnLeftClick(mouse rl.Vector2) {
 		p.CloseButton.Delete()
 	}
 }
+
 func (p *Panel) OnRightClick(mouse rl.Vector2) {
 	fmt.Println("box ", p.name, " RClicked at ", mouse)
 	if p.Shrinking || p.Dead {
 		return
 	}
+
+	horisontal := false
+	if mouse.X > p.GetBounds().X+p.GetBounds().Width/2 {
+		horisontal = true
+	}
+
+	newP := p.Split(0.5, horisontal)
+	p.newElementCh <- newP
 }
 
 func (p *Panel) OnDrag(mouse rl.Vector2) {

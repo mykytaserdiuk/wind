@@ -21,9 +21,11 @@ func main() {
 	defer rl.CloseWindow()
 
 	rect := models.NewRect(10, 10, 500, 200)
+	newElemCh := app.GetNewElementChannel()
 
-	box1 := modules.NewPanel("box1", rect, rl.Blue)
+	box1 := modules.NewPanel("box1", rect, rl.Blue, newElemCh)
 	box2 := box1.Split(0.5, false)
+
 	app.AddElement(box1)
 	app.AddElement(box2)
 
