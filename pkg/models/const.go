@@ -1,8 +1,8 @@
 package models
 
 const (
-	WindowWidth  = 800
-	WindowHeight = 450
+	WindowWidth  = 1000
+	WindowHeight = 1000
 
 	BoxDeleteSpeed = 6.0
 )
