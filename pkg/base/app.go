@@ -111,13 +111,13 @@ func (app *Application) Input() {
 		app.hudHovered = false
 		app.hud.OnUnhover(mouseScreen)
 	}
-	if rl.CheckCollisionPointRec(mouseWorld, app.hud.GetBounds()) {
+	if rl.CheckCollisionPointRec(mouseScreen, app.hud.GetBounds()) {
 		// HUD input
 		if rl.IsMouseButtonPressed(rl.MouseLeftButton) {
-			app.hud.OnLeftClick(mouseWorld)
+			app.hud.OnLeftClick(mouseScreen)
 		}
 		if rl.IsMouseButtonPressed(rl.MouseRightButton) {
-			app.hud.OnRightClick(mouseWorld)
+			app.hud.OnRightClick(mouseScreen)
 		}
 		mouseVal := rl.GetMouseWheelMove()
 		if mouseVal != 0 {

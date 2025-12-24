@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Changed
+- Hud color fix
 - Can create new panel with selected bg_color
 - Color picker was added
 - New changelog

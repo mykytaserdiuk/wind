@@ -44,8 +44,15 @@ func (c *ColorViewer) Draw() {
 
 		rl.DrawRectangleRec(r, bg)
 		rl.DrawRectangleLinesEx(r, 1, rl.DarkGray)
-
-		rl.DrawText(labels[i], int32(r.X+4), int32(r.Y-14), 10, rl.DarkGray)
+		var col rl.Color
+		if labels[i] == "R" {
+			col = rl.Red
+		} else if labels[i] == "G" {
+			col = rl.Green
+		} else {
+			col = rl.Blue
+		}
+		rl.DrawText(labels[i], int32(r.X+r.Width/2), int32(r.Y-14+(+r.Height/2)), 14, col)
 		rl.DrawText(fmt.Sprintf("%d", c.input[i]), int32(r.X+r.Width/2), int32(r.Y+r.Height/2), 14, rl.Black)
 	}
 
