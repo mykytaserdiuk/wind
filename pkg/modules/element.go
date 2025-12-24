@@ -41,6 +41,10 @@ type HUD interface {
 
 	GetBounds() rl.Rectangle
 	OnMouseWheel(value float32)
+	AddElement(el HUDElement)
+
+	OnHover(mousePos rl.Vector2)
+	OnUnhover(mousePos rl.Vector2)
 
 	OnLeftClick(mouse rl.Vector2)
 	OnRightClick(mouse rl.Vector2)
@@ -53,6 +57,9 @@ type HUDElement interface {
 
 	GetBounds() rl.Rectangle
 	OnMouseWheel(value float32)
+
+	OnHover(mousePos rl.Vector2)
+	OnUnhover(mousePos rl.Vector2)
 
 	OnLeftClick(mouse rl.Vector2)
 	OnRightClick(mouse rl.Vector2)

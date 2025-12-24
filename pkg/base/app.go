@@ -18,6 +18,7 @@ type Application struct {
 	hud          modules.HUD
 	newElementCh chan modules.Element
 
+	hudHovered    bool
 	hovered       modules.Element
 	activeElement modules.Element
 	dragging      bool
@@ -98,6 +99,18 @@ func (app *Application) Input() {
 	mouseScreen := rl.GetMousePosition()
 	mouseWorld := rl.GetScreenToWorld2D(mouseScreen, app.cam)
 
+	// HUD
+	insideHUD := rl.CheckCollisionPointRec(mouseScreen, app.hud.GetBounds())
+
+	if insideHUD && !app.hudHovered {
+		app.hudHovered = true
+		app.hud.OnHover(mouseScreen)
+	}
+
+	if !insideHUD && app.hudHovered {
+		app.hudHovered = false
+		app.hud.OnUnhover(mouseScreen)
+	}
 	if rl.CheckCollisionPointRec(mouseWorld, app.hud.GetBounds()) {
 		// HUD input
 		if rl.IsMouseButtonPressed(rl.MouseLeftButton) {
@@ -157,7 +170,7 @@ func (app *Application) Input() {
 	if rl.IsMouseButtonReleased(rl.MouseMiddleButton) {
 		app.middleBtnDown = false
 	}
-	if rl.IsKeyDown(rl.KeyR) {
+	if rl.IsKeyPressed(rl.KeyR) || rl.IsKeyDown(rl.KeyZ) {
 		app.cam.Zoom = 1
 		app.cam.Target = rl.NewVector2(0, 0)
 	}

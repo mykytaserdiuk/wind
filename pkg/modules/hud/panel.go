@@ -1,7 +1,7 @@
 package hud
 
 import (
-	"fmt"
+	"time"
 
 	rl "github.com/gen2brain/raylib-go/raylib"
 	"github.com/nikitaserdiuk9/pkg/models"
@@ -14,17 +14,45 @@ type HUDPanel struct {
 
 	elements []modules.HUDElement
 
+	hovered      modules.HUDElement
 	newElementCh chan modules.Element
-
-	ColorViewer *ColorViewer
 }
 
 func NewHUDPanel(baseRect *models.Rect, color rl.Color, newElementCh chan modules.Element) *HUDPanel {
-	return &HUDPanel{
+	colorViewer := NewColorViewer(0, 0)
+	panCreatorRect := models.NewRect(baseRect.Width+baseRect.PosX-100, baseRect.PosY, 100, baseRect.Height)
+	hud := &HUDPanel{
 		BaseRect:     *baseRect,
 		Color:        color,
 		newElementCh: newElementCh,
-		elements:     []modules.HUDElement{NewColorViewer(0, 0)},
+	}
+
+	panCreatorClickHandler := func() {
+		color := colorViewer.GetColor()
+		newPanelRect := models.NewRect(0, 0, 250, 250)
+		newPanel := modules.NewPanel(time.Now().GoString(), newPanelRect, color, hud.newElementCh)
+		hud.newElementCh <- newPanel
+	}
+
+	hud.AddElement(colorViewer)
+	hud.AddElement(NewPanelCreator(rl.Blue, *panCreatorRect, panCreatorClickHandler))
+	return hud
+}
+
+func (hp *HUDPanel) OnHover(mousePos rl.Vector2) {
+	for _, el := range hp.elements {
+		if rl.CheckCollisionPointRec(mousePos, el.GetBounds()) {
+			hp.hovered = el
+			el.OnHover(mousePos)
+		}
+	}
+}
+
+func (hp *HUDPanel) OnUnhover(mousePos rl.Vector2) {
+	for _, el := range hp.elements {
+		if rl.CheckCollisionPointRec(mousePos, el.GetBounds()) || hp.hovered == el {
+			el.OnUnhover(mousePos)
+		}
 	}
 }
 
@@ -43,15 +71,22 @@ func (hp *HUDPanel) OnKeyInput(key int, pressed bool) {
 }
 
 func (hp *HUDPanel) OnLeftClick(mouse rl.Vector2) {
-	fmt.Println("HUD left click ", mouse)
+	for _, el := range hp.elements {
+		if rl.CheckCollisionPointRec(mouse, el.GetBounds()) {
+			el.OnLeftClick(mouse)
+		}
+	}
 }
 
 func (hp *HUDPanel) OnRightClick(mouse rl.Vector2) {
-	fmt.Println("HUD right click ", mouse)
+	for _, el := range hp.elements {
+		if rl.CheckCollisionPointRec(mouse, el.GetBounds()) {
+			el.OnRightClick(mouse)
+		}
+	}
 }
 func (hp *HUDPanel) OnMouseWheel(value float32) {
 	mousePos := rl.GetMousePosition()
-	fmt.Println("1", mousePos)
 
 	for _, el := range hp.elements {
 		if rl.CheckCollisionPointRec(mousePos, el.GetBounds()) {
@@ -65,4 +100,8 @@ func (hp *HUDPanel) Draw() {
 	for _, el := range hp.elements {
 		el.Draw()
 	}
+}
+
+func (hp *HUDPanel) AddElement(el modules.HUDElement) {
+	hp.elements = append(hp.elements, el)
 }
