@@ -29,7 +29,31 @@ type Elements []Element
 func (es Elements) LayerSort() Elements {
 	sort.Slice(es, func(i, j int) bool {
 		ei, ej := es[i], es[j]
-		return ei.GetLayer() < ej.GetLayer() // < вместо >
+		return ei.GetLayer() < ej.GetLayer()
 	})
 	return es
+}
+
+type HUD interface {
+	Draw()
+	Update(dt float32)
+	OnKeyInput(key int, pressed bool)
+
+	GetBounds() rl.Rectangle
+	OnMouseWheel(value float32)
+
+	OnLeftClick(mouse rl.Vector2)
+	OnRightClick(mouse rl.Vector2)
+}
+
+type HUDElement interface {
+	Draw()
+	Update(dt float32)
+	GetLayer() int8
+
+	GetBounds() rl.Rectangle
+	OnMouseWheel(value float32)
+
+	OnLeftClick(mouse rl.Vector2)
+	OnRightClick(mouse rl.Vector2)
 }

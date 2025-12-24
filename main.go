@@ -9,7 +9,8 @@ import (
 )
 
 var (
-	app = base.NewApplication()
+	app          = base.NewApplication()
+	newElementCh chan modules.Element
 )
 
 func init() {
